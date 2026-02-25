@@ -1,5 +1,5 @@
 - name: Install and Configure NodeJS Backend
-  hosts: backend
+  hosts: app1
   become: yes
   vars:
     mysql_host: 172.31.4.179
