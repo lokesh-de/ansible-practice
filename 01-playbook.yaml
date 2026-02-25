@@ -1,14 +1,17 @@
 ---
 - name: Install and Configure MySQL Server
-  hosts: db1
+  hosts: db
   become: true
 
   tasks:
 
-    - name: Install MySQL Server 8.0
-      ansible.builtin.dnf:
-        name: mysql-server
-        state: present
+    - name: Remove MySQL Community Repo (if exists)
+      ansible.builtin.file:
+        path: /etc/yum.repos.d/mysql-community.repo
+        state: absent
+
+    - name: Install MySQL Server
+      ansible.builtin.command: dnf install mysql-server -y
 
     - name: Enable MySQL Service
       ansible.builtin.systemd_service:
