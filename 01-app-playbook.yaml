@@ -1,0 +1,79 @@
+- name: Install and Configure NodeJS Backend
+  hosts: backend
+  become: yes
+  vars:
+    mysql_host: 172.31.4.179
+
+  tasks:
+
+  - name: Disable old NodeJS module
+    command: dnf module disable nodejs -y
+
+  - name: Enable NodeJS 20 module
+    command: dnf module enable nodejs:20 -y
+
+  - name: Install NodeJS
+    dnf:
+      name: nodejs
+      state: present
+
+  - name: Update OpenSSH packages
+    dnf:
+      name:
+        - openssh
+        - openssh-server
+        - openssh-clients
+      state: latest
+
+  - name: Create expense user
+    user:
+      name: expense
+
+  - name: Create app directory
+    file:
+      path: /app
+      state: directory
+
+  - name: Download backend code
+    get_url:
+      url: https://expense-joindevops.s3.us-east-1.amazonaws.com/expense-backend-v2.zip
+      dest: /tmp/backend.zip
+
+  - name: Unzip backend code
+    unarchive:
+      src: /tmp/backend.zip
+      dest: /app
+      remote_src: yes
+
+  - name: Install NodeJS dependencies
+    command: npm install
+    args:
+      chdir: /app
+
+  - name: Copy backend service file
+    template:
+      src: backend.service
+      dest: /etc/systemd/system/backend.service
+
+  - name: Reload systemd
+    command: systemctl daemon-reload
+
+  - name: Start backend service
+    service:
+      name: backend
+      state: started
+      enabled: yes
+
+  - name: Install MySQL Client
+    dnf:
+      name: mysql
+      state: present
+
+  - name: Load Schema
+    shell: |
+      mysql -h {{ mysql_host }} -uroot -pExpenseApp@1 < /app/schema/backend.sql
+
+  - name: Restart backend service
+    service:
+      name: backend
+      state: restarted
