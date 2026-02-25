@@ -1,23 +1,31 @@
 ---
-- name: Install MySQL 8.0 on RHEL
-  hosts: db
-  become: yes
+- name: Install MySQL server using DNF module
+  hosts: db1  
+  become: true
 
   tasks:
-
-  - name: Disable default MySQL module
-    command: dnf module disable mysql -y
-
-  - name: Install MySQL 8 Repo
-    command: dnf install -y https://dev.mysql.com/get/mysql80-community-release-el9-1.noarch.rpm
-
-  - name: Install MySQL Server
-    dnf:
-      name: mysql-community-server
-      state: present
-
-  - name: Start MySQL Service
-    service:
-      name: mysqld
-      state: started
-      enabled: yes
+    - name: Disable default MySQL module
+      ansible.builtin.command: dnf module disable mysql -y
+    - name: Ensure MySQL community repository is installed
+      ansible.builtin.dnf:
+        name: https://dev.mysql.com/get/mysql80-community-release-el9-1.noarch.rpm
+        state: present
+        disable_gpg_check: true
+    - name: Import MySQL GPG key
+      ansible.builtin.command: rpm --import https://repo.mysql.com/RPM-GPG-KEY-mysql-2023
+    - name: Install MySQL server package
+      ansible.builtin.dnf:
+        name: mysql-community-server
+        state: present
+      notify:
+        - Start and enable MySQL service
+    - name: Install PyMySQL Python library
+      ansible.builtin.dnf:
+        name: python3-PyMySQL
+        state: present
+  handlers:
+    - name: Start and enable MySQL service
+      ansible.builtin.systemd_service:
+        name: mysqld
+        state: started
+        enabled: true
