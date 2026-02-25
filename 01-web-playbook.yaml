@@ -1,0 +1,75 @@
+---
+- name: Install and Configure Nginx Web Server
+  hosts: web
+  become: yes
+
+  vars:
+    backend_host: 172.31.1.189   
+
+  tasks:
+
+    - name: Install Nginx
+      ansible.builtin.dnf:
+        name: nginx
+        state: present
+
+    - name: Enable Nginx
+      ansible.builtin.service:
+        name: nginx
+        enabled: yes
+
+    - name: Start Nginx
+      ansible.builtin.service:
+        name: nginx
+        state: started
+
+    - name: Remove default website content
+      ansible.builtin.file:
+        path: /usr/share/nginx/html
+        state: absent
+
+    - name: Create nginx html directory
+      ansible.builtin.file:
+        path: /usr/share/nginx/html
+        state: directory
+        mode: '0755'
+
+    - name: Download Frontend Code
+      ansible.builtin.get_url:
+        url: https://expense-joindevops.s3.us-east-1.amazonaws.com/expense-frontend-v2.zip
+        dest: /tmp/frontend.zip
+
+    - name: Extract Frontend Code
+      ansible.builtin.unarchive:
+        src: /tmp/frontend.zip
+        dest: /usr/share/nginx/html
+        remote_src: yes
+
+    - name: Install unzip
+      ansible.builtin.dnf:
+        name: unzip
+        state: present
+
+    - name: Create Nginx Reverse Proxy Config
+      ansible.builtin.copy:
+        dest: /etc/nginx/default.d/expense.conf
+        content: |
+          proxy_http_version 1.1;
+
+          location /api/ {
+            proxy_pass http://{{ backend_host }}:8080/;
+          }
+
+          location /health {
+            stub_status on;
+            access_log off;
+          }
+      notify:
+        - Restart Nginx
+
+  handlers:
+
+    - name: Restart Nginx
+      ansible.builtin.service:
+        name: nginx
+        state: restarted
