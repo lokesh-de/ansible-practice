@@ -1,0 +1,20 @@
+#structure of yaml file
+---
+name: ansible-practice
+version: 1.0
+description: This is a sample yaml file for ansible practice
+author: John Loki
+#list of tasks
+tasks:
+  - gym
+  - work
+  - sleep
+#nested structure
+details:
+  name: John Loki
+  age: 30   
+  city: New York
+  hobbies:
+    - coding
+    - traveling
+    - cooking
