@@ -1,0 +1,22 @@
+---
+- name: Install MySQL 8.0
+  hosts: db
+  become: yes
+
+  tasks:
+
+  - name: Install MySQL 8 repository
+    yum:
+      name: https://dev.mysql.com/get/mysql80-community-release-el9-1.noarch.rpm
+      state: present
+
+  - name: Install MySQL Server
+    yum:
+      name: mysql-community-server
+      state: present
+
+  - name: Start MySQL Service
+    service:
+      name: mysqld
+      state: started
+      enabled: yes
