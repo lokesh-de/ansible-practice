@@ -1,19 +1,27 @@
 --- 
 - hosts: localhost
   connection: local
+  vars:
+    type: t2.micro
+    region: us-east-1
+    group: default
+    image: ami-04b70fa74e45c3917
+    environment: Testing
+    public_ip: true
+    name: ansible-instance
   tasks:
   - name: start an instance with a public IP address
     amazon.aws.ec2_instance:
-      name: "ansible-instance"
+      name: "{{ name }}"
       # key_name: "prod-ssh-key"
       # vpc_subnet_id: subnet-013744e41e8088axx
-      instance_type: t2.micro
-      security_group: default
-      region: us-east-1
+      instance_type: "{{ type }}"
+      security_group: "{{ group }}"
+      region: "{{ region }}"
       aws_access_key: "{{ec2_access_key}}"  # From vault as defined
       aws_secret_key: "{{ec2_secret_key}}"  # From vault as defined      
       network:
         assign_public_ip: true
-      image_id: ami-04b70fa74e45c3917
+      image_id: "{{ image }}"
       tags:
-        Environment: Testing
+        Environment: "{{ environment }}"
